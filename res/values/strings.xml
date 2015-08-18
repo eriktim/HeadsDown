@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">HeadsDown</string>
+    <string name="settings_activity_title">HeadsDown</string>
+    <string name="heads_up_notifications_enabled">Heads-up notifications</string>
+    <string name="heads_up_notifications_enabled_summ">Allow high priority notifications to appear on top of active apps</string>
+
+</resources>

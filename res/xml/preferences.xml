@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <SwitchPreference
+        android:defaultValue="@bool/heads_up_notifications_enabled_default"
+        android:key="heads_up_notifications_enabled"
+        android:summary="@string/heads_up_notifications_enabled_summ"
+        android:title="@string/heads_up_notifications_enabled" />
+
+</PreferenceScreen>
