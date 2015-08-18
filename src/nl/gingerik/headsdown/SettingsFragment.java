@@ -1,6 +1,7 @@
 package nl.gingerik.headsdown;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 
 import android.content.SharedPreferences;
@@ -86,18 +87,23 @@ public class SettingsFragment extends PreferenceFragment implements
 		String result = null;
 		Runtime runtime = Runtime.getRuntime();
 		try {
-			Process process = runtime.exec(command);
+			Process process = runtime.exec("su");
+			DataOutputStream stdin = new DataOutputStream(
+					process.getOutputStream());
+			stdin.writeBytes(command + "\n");
+			stdin.writeBytes("exit\n");
+			BufferedReader stdout = new BufferedReader(new InputStreamReader(
+					process.getInputStream()));
+			StringBuilder output = new StringBuilder();
+			String line;
+			while ((line = stdout.readLine()) != null) {
+				output.append(line + "\n");
+			}
+			stdin.close();
+			stdout.close();
 			process.waitFor();
 			if (process.exitValue() == 0) {
-				BufferedReader bufferedReader = new BufferedReader(
-						new InputStreamReader(process.getInputStream()));
-				StringBuilder output = new StringBuilder();
-				String line;
-				while ((line = bufferedReader.readLine()) != null) {
-					output.append(line + "\n");
-				}
 				result = output.toString();
-				bufferedReader.close();
 			}
 		} catch (Exception e) {
 			mLog.e("Failed executing command: " + command);
