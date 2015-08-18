@@ -1,8 +1,6 @@
 package nl.gingerik.headsdown;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
+import java.util.concurrent.ExecutionException;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -16,6 +14,7 @@ public class SettingsFragment extends PreferenceFragment implements
 
 	private Logger mLog;
 	private SharedPreferences mSharedPref;
+	private SUProcess mProcess;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -27,6 +26,7 @@ public class SettingsFragment extends PreferenceFragment implements
 		// Load the preferences from an XML resource
 		addPreferencesFromResource(R.xml.preferences);
 
+		mProcess = new SUProcess();
 		mSharedPref = PreferenceManager
 				.getDefaultSharedPreferences(getActivity());
 		onSharedPreferenceChanged(mSharedPref, SettingsActivity.PREF_ENABLE);
@@ -66,49 +66,29 @@ public class SettingsFragment extends PreferenceFragment implements
 	private void setHeadsUpNotificationsEnabled(boolean enable) {
 		String command = "settings put global heads_up_notifications_enabled "
 				+ (enable ? "1" : "0");
-		String result = exec(command);
-		if (result == null) {
-			mLog.e("Failed: " + command);
-		} else {
-			mLog.v(command);
+		try {
+			String result = mProcess.execute(command).get();
+			if (result == null) {
+				mLog.e("Failed: " + command);
+			} else {
+				mLog.v(command);
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
 		}
 	}
 
 	private void loadSettings() {
 		mLog.v("loadSettings");
-		String result = exec("settings get global heads_up_notifications_enabled");
-		boolean flag = "1".equals(result);
-		Editor editor = mSharedPref.edit();
-		editor.putBoolean(SettingsActivity.PREF_ENABLE, flag);
-		editor.apply();
-	}
-
-	private String exec(String command) {
-		String result = null;
-		Runtime runtime = Runtime.getRuntime();
 		try {
-			Process process = runtime.exec("su");
-			DataOutputStream stdin = new DataOutputStream(
-					process.getOutputStream());
-			stdin.writeBytes(command + "\n");
-			stdin.writeBytes("exit\n");
-			BufferedReader stdout = new BufferedReader(new InputStreamReader(
-					process.getInputStream()));
-			StringBuilder output = new StringBuilder();
-			String line;
-			while ((line = stdout.readLine()) != null) {
-				output.append(line + "\n");
-			}
-			stdin.close();
-			stdout.close();
-			process.waitFor();
-			if (process.exitValue() == 0) {
-				result = output.toString();
-			}
-		} catch (Exception e) {
-			mLog.e("Failed executing command: " + command);
+			String result = mProcess.execute(
+					"settings get global heads_up_notifications_enabled").get();
+			boolean flag = "1".equals(result);
+			Editor editor = mSharedPref.edit();
+			editor.putBoolean(SettingsActivity.PREF_ENABLE, flag);
+			editor.apply();
+		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		return result;
 	}
 }
